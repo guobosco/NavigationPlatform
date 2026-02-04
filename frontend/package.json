@@ -1,0 +1,26 @@
+{
+  "name": "starbase-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pinia": "^2.1.7",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@iconify-json/mdi": "^1.1.64",
+    "@types/node": "^20.11.0",
+    "@unocss/reset": "^0.58.3",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "typescript": "^5.2.2",
+    "unocss": "^0.58.3",
+    "vite": "^5.0.0",
+    "vue-tsc": "^1.8.27"
+  }
+}

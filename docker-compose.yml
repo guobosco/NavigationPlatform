@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  starbase:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: starbase_app
+    restart: always
+    ports:
+      - "80:8000"
+    volumes:
+      - starbase_data:/app/data
+
+volumes:
+  starbase_data:
