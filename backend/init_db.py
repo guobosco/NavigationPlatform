@@ -1,109 +1,83 @@
-from sqlalchemy.orm import Session
-from .database import SessionLocal, engine
-from . import models
-from .main import get_password_hash
-import base64
+try:
+    from .database import SessionLocal, engine
+    from . import models
+except ImportError:
+    from database import SessionLocal, engine
+    import models
+
+import bcrypt
 
 def init_db():
-    """初始化数据库，创建默认用户和示例数据"""
     db = SessionLocal()
     
-    # 检查是否已存在管理员用户
-    admin = db.query(models.AdminUser).filter(models.AdminUser.username == "admin").first()
+    # 1. Check if Admin exists
+    admin = db.query(models.User).filter(models.User.username == "admin").first()
     if not admin:
-        print("Creating default admin user...")
-        # 创建默认管理员: admin / admin123
-        admin = models.AdminUser(
-            username="admin",
-            password_hash=get_password_hash("admin123")
+        print("Creating admin user...")
+        pwd_hash = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        admin_user = models.User(
+            username="admin", 
+            password_hash=pwd_hash, 
+            plain_password="admin123", # For demo/admin view
+            role=models.UserRole.admin
         )
-        db.add(admin)
+        db.add(admin_user)
+    else:
+        # Update existing admin to have plain_password if missing
+        if not admin.plain_password:
+             print("Updating admin user with plain password...")
+             admin.plain_password = "admin123" # Reset/Update for consistency
     
-    # 检查并初始化系统配置
-    if not db.query(models.SystemConfig).first():
-        print("Seeding config...")
-        db.add(models.SystemConfig(key="title", value="办公网网信系统融合应用平台"))
-        db.add(models.SystemConfig(key="slogan", value="打造网信系统开发、发布、推广应用的开放平台"))
-    
-    # 如果没有应用，则填充示例数据
-    if not db.query(models.ApprovedApp).first():
-        print("Seeding example apps...")
-        examples = [
-            {
-                "name": "协同办公系统",
-                "category": models.CategoryEnum.web,
-                "description": "提供日常办公协同、文档管理、流程审批等核心功能",
-                "scope": "全公司",
-                "developer": "信息中心",
-                "deploy_env": "生产环境",
-                "admin_contact": "张三"
-            },
-            {
-                "name": "项目管理平台",
-                "category": models.CategoryEnum.web,
-                "description": "航天项目全生命周期管理，支持任务分配、进度跟踪、资源调度",
-                "scope": "研发部",
-                "developer": "研发部",
-                "deploy_env": "生产环境",
-                "admin_contact": "李四"
-            },
-            {
-                "name": "数据资源中心",
-                "category": models.CategoryEnum.data,
-                "description": "统一数据资源管理，提供数据查询、分析和可视化服务",
-                "scope": "数据部",
-                "developer": "数据部",
-                "deploy_env": "生产环境",
-                "admin_contact": "王五"
-            },
-            {
-                "name": "代码仓库平台",
-                "category": models.CategoryEnum.service,
-                "description": "Git代码托管、版本管理、代码审查和CI/CD集成",
-                "scope": "技术部",
-                "developer": "技术部",
-                "deploy_env": "生产环境",
-                "admin_contact": "赵六"
-            },
-             {
-                "name": "系统监控中心",
-                "category": models.CategoryEnum.service,
-                "description": "实时监控系统运行状态、性能指标和告警信息",
-                "scope": "运维部",
-                "developer": "运维部",
-                "deploy_env": "生产环境",
-                "admin_contact": "孙七"
-            },
-             {
-                "name": "知识库系统",
-                "category": models.CategoryEnum.other,
-                "description": "技术文档、规范标准、最佳实践的集中管理和分享",
-                "scope": "技术委员会",
-                "developer": "技术委员会",
-                "deploy_env": "测试环境",
-                "admin_contact": "周八"
-            }
-        ]
-        
-        for ex in examples:
-            app = models.ApprovedApp(
-                name=ex["name"],
-                url="http://example.com", # 示例链接
-                description=ex["description"],
-                developer=ex["developer"],
-                deploy_env=ex["deploy_env"],
-                category=ex["category"],
-                scope=ex["scope"],
-                admin_contact=ex["admin_contact"],
-                status=1 # 默认上线
-            )
-            db.add(app)
-            
+    # 2. Check if Standard User exists
+    user = db.query(models.User).filter(models.User.username == "user").first()
+    if not user:
+        print("Creating standard user...")
+        pwd_hash = bcrypt.hashpw("user123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        std_user = models.User(
+            username="user", 
+            password_hash=pwd_hash, 
+            plain_password="user123", # For demo/admin view
+            role=models.UserRole.user
+        )
+        db.add(std_user)
+    else:
+        # Update existing user to have plain_password if missing
+        if not user.plain_password:
+            print("Updating standard user with plain password...")
+            user.plain_password = "user123"
+
+    # 3. Init Categories
+    categories = [
+        ("web", "行政办公"),
+        ("desktop", "业务系统"),
+        ("data", "资源数据"),
+        ("service", "开发工具"),
+        ("other", "监控运维")
+    ]
+    for i, (name, label) in enumerate(categories):
+        cat = db.query(models.Category).filter(models.Category.name == name).first()
+        if not cat:
+            print(f"Creating category: {label}")
+            db.add(models.Category(name=name, label=label, sort_order=i))
+
+    # 4. Init Scopes
+    scopes = [
+        ("all", "全公司"),
+        ("dept", "部门内部"),
+        ("group", "项目组"),
+        ("personal", "个人专用")
+    ]
+    for i, (name, label) in enumerate(scopes):
+        scope = db.query(models.AppScope).filter(models.AppScope.name == name).first()
+        if not scope:
+            print(f"Creating scope: {label}")
+            db.add(models.AppScope(name=name, label=label, sort_order=i))
+
     db.commit()
     db.close()
-    print("Database initialized.")
+    print("Database initialized successfully.")
 
 if __name__ == "__main__":
-    # 确保所有表都已创建
+    # Ensure tables are created
     models.Base.metadata.create_all(bind=engine)
     init_db()

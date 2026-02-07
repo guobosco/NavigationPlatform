@@ -1,9 +1,25 @@
 <script setup lang="ts">
 import NavBar from './components/NavBar.vue'
 import { useThemeStore } from './stores/theme'
+import { ref, onMounted } from 'vue'
 
 // 获取主题状态，用于动态调整 SVG 背景颜色
 const themeStore = useThemeStore()
+const footerCopyright = ref('© 2024 StarBase. All rights reserved.')
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/config')
+    if (res.ok) {
+      const data = await res.json()
+      if (data.footer_copyright) {
+        footerCopyright.value = data.footer_copyright
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load config', e)
+  }
+})
 </script>
 
 <template>
@@ -30,7 +46,7 @@ const themeStore = useThemeStore()
     
     <!-- 页脚 -->
     <footer class="text-center py-6 text-xs text-[var(--text-secondary)] border-t border-[var(--border-color)] mt-8">
-      <p>&copy; 2024 航天网信系统. 内部机密，严禁外传.</p>
+      <p>{{ footerCopyright }}</p>
     </footer>
   </div>
 </template>
