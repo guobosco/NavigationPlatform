@@ -10,81 +10,90 @@ const props = defineProps<{
 const userStore = useUserStore()
 const showCreds = ref(false)
 const decryptedPass = ref('')
-const username = ref('') // Needs to be stored too?
-// Requirement says "Manage personal credentials (add/delete/auto-fill)".
-// So for each app, user can store {username, password}.
-// Where is it stored? "Frontend: AES-GCM encrypted credentials -> localStorage".
-// Key: `starbase_credentials`. content: `{ appId: {u, p} }` encrypted? 
-// Or `starbase_credentials` is the big blob.
+const username = ref('') 
 
-// I need to fetch the credential for this app from the store.
-// But the store needs to handle the big blob.
-// Let's assume the store has a method `getCredential(appId)`.
-
+// 检查是否存在已保存的凭据
 const hasCredential = computed(() => {
-  // Check if credential exists for this app
-  // Implementation detail: Load all creds once decrypted
-  return false // TODO: Implement
+  // 暂时未实现持久化存储凭据的逻辑
+  return false 
 })
 
+// 打开应用链接
 const openApp = () => {
   window.open(props.app.url, '_blank')
 }
 
+// 处理凭据解密和自动填充（模拟）
 const handleKey = async () => {
-  // Logic to decrypt
-  // For demo, just alert or copy
   if (!userStore.checkSession()) {
     const pwd = prompt("请输入您的主密码以解密凭据：")
     if (pwd) {
-      // Verify by trying to decrypt check
-      // For now just set it
       userStore.setSessionPassword(pwd)
     } else {
       return
     }
   }
-  // Decrypt
+  // 解密逻辑
   alert("凭据自动填充功能受限于浏览器安全策略，请使用'复制'功能。\n(模拟：已解密凭据)")
 }
 </script>
 
 <template>
-  <div class="card p-4 flex flex-col h-full relative group">
-    <div class="flex items-start justify-between mb-3">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded bg-gray-200 overflow-hidden flex-shrink-0">
-          <img v-if="app.thumbnail_base64" :src="app.thumbnail_base64" class="w-full h-full object-cover" />
-          <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-            <div class="i-mdi-image-off text-2xl" />
-          </div>
-        </div>
-        <div>
-          <h3 class="font-bold text-lg leading-tight group-hover:text-primary transition-colors cursor-pointer" @click="openApp">{{ app.name }}</h3>
-          <div class="flex items-center gap-2 mt-1">
-            <BadgeCategory :category="app.category" />
-            <span class="text-xs text-[var(--text-secondary)] border border-[var(--border-color)] px-1 rounded">{{ app.deploy_env }}</span>
-          </div>
-        </div>
+  <div class="card flex flex-col h-full relative group hover:border-[var(--primary-color)] hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden" @click="openApp">
+    <!-- 上方：缩略图区域 (横向占满) -->
+    <div class="relative w-full h-32 bg-gray-100 dark:bg-slate-700 overflow-hidden">
+      <img v-if="app.thumbnail_base64" :src="app.thumbnail_base64" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-slate-800">
+        <div class="i-mdi-image-outline text-4xl mb-1" />
+        <span class="text-[10px]">暂无预览</span>
+      </div>
+      <!-- 分类标签 (悬浮在图片右上角) -->
+      <div class="absolute top-2 right-2">
+        <BadgeCategory :category="app.category" class="shadow-sm opacity-90 backdrop-blur-sm" />
       </div>
     </div>
-    
-    <p class="text-sm text-[var(--text-secondary)] line-clamp-2 mb-4 flex-grow" :title="app.description">
-      {{ app.description }}
-    </p>
-    
-    <div class="flex items-center justify-between text-xs text-[var(--text-secondary)] mt-auto pt-3 border-t border-[var(--border-color)]">
-      <div class="flex items-center gap-1" title="开发部门">
-        <div class="i-mdi-account-group" />
-        <span>{{ app.developer }}</span>
+
+    <!-- 下方：内容区域 -->
+    <div class="p-4 flex flex-col flex-grow">
+      <!-- 标题和链接 -->
+      <div class="flex items-start justify-between mb-2">
+        <!-- 移除 line-clamp-1，允许标题自动换行 -->
+        <h3 class="font-bold text-base text-[var(--text-primary)] leading-tight group-hover:text-[var(--primary-color)] transition-colors" :title="app.name">
+          {{ app.name }}
+        </h3>
       </div>
-      <div class="flex items-center gap-2">
-        <button v-if="hasCredential" @click.stop="handleKey" class="icon-btn text-yellow-500" title="一键登录">
-          <div class="i-mdi-key-variant" />
-        </button>
-        <button @click="openApp" class="btn text-xs py-1 px-3">
-          进入系统
-        </button>
+
+      <!-- 简介 -->
+      <!-- 添加 title 属性，鼠标悬浮显示全文 -->
+      <p class="text-xs text-[var(--text-secondary)] line-clamp-2 mb-4 leading-relaxed h-8" :title="app.description || '暂无描述'">
+        {{ app.description || '暂无描述' }}
+      </p>
+
+      <!-- 详细元数据列表 -->
+      <div class="mt-auto space-y-1.5 pt-3 border-t border-[var(--border-color)]">
+        <div class="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+          <span class="flex items-center gap-1.5 opacity-80">
+            <div class="i-mdi-domain text-[var(--primary-color)] opacity-70" />
+            <span>开发单位</span>
+          </span>
+          <span class="font-medium truncate max-w-[50%]" :title="app.developer">{{ app.developer }}</span>
+        </div>
+        
+        <div class="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+          <span class="flex items-center gap-1.5 opacity-80">
+            <div class="i-mdi-account-tie text-[var(--primary-color)] opacity-70" />
+            <span>管理员</span>
+          </span>
+          <span class="font-medium truncate max-w-[50%]" :title="app.admin_contact">{{ app.admin_contact }}</span>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+          <span class="flex items-center gap-1.5 opacity-80">
+            <div class="i-mdi-map-marker-radius text-[var(--primary-color)] opacity-70" />
+            <span>应用范围</span>
+          </span>
+          <span class="font-medium truncate max-w-[50%]" :title="app.scope">{{ app.scope }}</span>
+        </div>
       </div>
     </div>
   </div>

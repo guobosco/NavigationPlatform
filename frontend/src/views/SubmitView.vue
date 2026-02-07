@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 
+// 表单数据
 const form = reactive({
   name: '',
   url: '',
@@ -14,9 +15,10 @@ const form = reactive({
 })
 
 const submitting = ref(false)
-const successToken = ref('')
+const successToken = ref('') // 提交成功后的凭证
 const errors = reactive<Record<string, string>>({})
 
+// 分类选项
 const categories = [
   { value: 'web', label: 'Web应用' },
   { value: 'desktop', label: '桌面应用' },
@@ -26,9 +28,10 @@ const categories = [
   { value: 'other', label: '其他' },
 ]
 
-// Internal IP Regex
+// 内网 IP 正则表达式
 const urlRegex = /^https?:\/\/(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.).*$/
 
+// 表单验证
 const validate = () => {
   Object.keys(errors).forEach(k => delete errors[k])
   let valid = true
@@ -45,6 +48,7 @@ const validate = () => {
   return valid
 }
 
+// 处理图片上传
 const handleFile = (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -58,11 +62,13 @@ const handleFile = (e: Event) => {
   reader.onload = (event) => {
     const img = new Image()
     img.onload = () => {
+      // 使用 Canvas 压缩图片
       const canvas = document.createElement('canvas')
       let width = img.width
       let height = img.height
       const maxSize = 800
       
+      // 调整尺寸
       if (width > height) {
         if (width > maxSize) {
           height *= maxSize / width
@@ -80,7 +86,7 @@ const handleFile = (e: Event) => {
       const ctx = canvas.getContext('2d')
       ctx?.drawImage(img, 0, 0, width, height)
       
-      // Compress to ensure < 100KB
+      // 压缩至 < 100KB
       let quality = 0.8
       let dataUrl = canvas.toDataURL('image/jpeg', quality)
       while (dataUrl.length > 100 * 1024 && quality > 0.1) {
@@ -95,6 +101,7 @@ const handleFile = (e: Event) => {
   reader.readAsDataURL(file)
 }
 
+// 提交表单
 const submit = async () => {
   if (!validate()) return
   
@@ -109,7 +116,7 @@ const submit = async () => {
     if (res.ok) {
       const data = await res.json()
       successToken.value = data.submit_token
-      // Save locally
+      // 保存提交记录到本地
       const mySubmits = JSON.parse(localStorage.getItem('my_submits') || '[]')
       mySubmits.push({ token: data.submit_token, timestamp: Date.now(), name: form.name })
       localStorage.setItem('my_submits', JSON.stringify(mySubmits))
@@ -135,6 +142,7 @@ const submit = async () => {
       <p class="text-[var(--text-secondary)]">填写系统信息，提交后将进入审核流程</p>
     </div>
 
+    <!-- 提交成功展示凭证 -->
     <div v-if="successToken" class="card p-8 text-center border-l-4 border-l-green-500">
       <div class="i-mdi-check-circle text-5xl text-green-500 mx-auto mb-4" />
       <h2 class="text-2xl font-bold mb-2">🚀 提交成功！</h2>
@@ -147,6 +155,7 @@ const submit = async () => {
       </div>
     </div>
 
+    <!-- 提交表单 -->
     <form v-else @submit.prevent="submit" class="card p-8 space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>

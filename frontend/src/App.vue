@@ -2,31 +2,25 @@
 import NavBar from './components/NavBar.vue'
 import { useThemeStore } from './stores/theme'
 
+// 获取主题状态，用于动态调整 SVG 背景颜色
 const themeStore = useThemeStore()
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col relative overflow-hidden">
-    <!-- SVG Background -->
-    <div class="fixed inset-0 z-[-1] pointer-events-none">
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="stars" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-            <circle cx="10" cy="10" r="1" :fill="themeStore.theme === 'dark' ? '#4a6fa5' : '#d1d9e6'" opacity="0.5"/>
-            <circle cx="50" cy="60" r="1.5" :fill="themeStore.theme === 'dark' ? '#4a6fa5' : '#d1d9e6'" opacity="0.3"/>
-            <circle cx="80" cy="30" r="0.8" :fill="themeStore.theme === 'dark' ? '#4a6fa5' : '#d1d9e6'" opacity="0.6"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#stars)" />
-        <!-- Orbit Lines -->
-        <circle cx="0" cy="100%" r="40%" fill="none" :stroke="themeStore.theme === 'dark' ? 'rgba(74, 111, 165, 0.1)' : 'rgba(209, 217, 230, 0.3)'" stroke-width="1" />
-        <circle cx="100%" cy="0" r="30%" fill="none" :stroke="themeStore.theme === 'dark' ? 'rgba(74, 111, 165, 0.1)' : 'rgba(209, 217, 230, 0.3)'" stroke-width="1" />
-      </svg>
+  <div class="min-h-screen flex flex-col relative overflow-hidden bg-[var(--bg-primary)]">
+    <!-- SVG 动态背景 - 简化版，去除复杂的星空，保留极简的几何装饰或渐变 -->
+    <div class="fixed inset-0 z-0 pointer-events-none opacity-40">
+      <!-- 极简的渐变光晕 -->
+      <div class="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-[var(--primary-light)] blur-[100px] opacity-20 animate-pulse"></div>
+      <div class="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-purple-300 blur-[80px] opacity-20 dark:opacity-10"></div>
     </div>
 
+    <!-- 顶部导航栏 -->
     <NavBar />
     
-    <main class="flex-grow container mx-auto px-4 py-8">
+    <!-- 主要内容区域 -->
+    <main class="flex-grow container mx-auto px-4 py-8 relative z-10">
+      <!-- 路由视图，包含过渡动画 -->
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -34,6 +28,7 @@ const themeStore = useThemeStore()
       </router-view>
     </main>
     
+    <!-- 页脚 -->
     <footer class="text-center py-6 text-xs text-[var(--text-secondary)] border-t border-[var(--border-color)] mt-8">
       <p>&copy; 2024 航天网信系统. 内部机密，严禁外传.</p>
     </footer>

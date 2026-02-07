@@ -4,17 +4,16 @@ import { useRouter } from 'vue-router'
 import BadgeCategory from '../components/Badge_Category.vue'
 
 const router = useRouter()
+// 当前激活的标签页
 const activeTab = ref('pending')
+// 待审核应用列表
 const pendingApps = ref<any[]>([])
+// 系统配置
 const config = reactive({ title: '', slogan: '' })
-const auditLogs = ref<any[]>([]) // Not implemented in API yet fully but mentioned in reqs
-// Reqs said: /api/admin/audit-log GET. I didn't implement that endpoint yet.
-// I will add it to the Todo or just mock it/skip it for now as "Manage Apps" is more critical.
-// Actually, "Manage online cards" is required.
-// So tabs: Pending, Config, Online Apps.
-
+// 在线应用列表
 const onlineApps = ref<any[]>([])
 
+// 封装带认证的 Fetch 请求
 const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('starbase_admin_token')
   if (!token) {
@@ -32,6 +31,7 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   return res
 }
 
+// 加载待审核列表
 const loadPending = async () => {
   try {
     const res = await fetchWithAuth('/api/admin/pending')
@@ -39,13 +39,15 @@ const loadPending = async () => {
   } catch (e) {}
 }
 
+// 加载在线应用列表
 const loadOnline = async () => {
    try {
-    const res = await fetch('/api/apps') // Public API
+    const res = await fetch('/api/apps') // 公开 API
     if (res.ok) onlineApps.value = await res.json()
   } catch (e) {}
 }
 
+// 加载系统配置
 const loadConfig = async () => {
   try {
     const res = await fetch('/api/config')
@@ -63,6 +65,7 @@ onMounted(() => {
   loadConfig()
 })
 
+// 批准应用
 const approve = async (id: number) => {
   if (!confirm('确认审核通过该系统？')) return
   try {
@@ -74,6 +77,7 @@ const approve = async (id: number) => {
   } catch (e) {}
 }
 
+// 删除应用
 const deleteApp = async (id: number) => {
   if (!confirm('确认删除该系统？此操作不可恢复。')) return
   try {
@@ -84,6 +88,7 @@ const deleteApp = async (id: number) => {
   } catch (e) {}
 }
 
+// 保存系统配置
 const saveConfig = async () => {
   try {
     const res = await fetchWithAuth('/api/admin/config', {
@@ -95,6 +100,7 @@ const saveConfig = async () => {
   } catch (e) {}
 }
 
+// 退出登录
 const logout = () => {
   localStorage.removeItem('starbase_admin_token')
   router.push('/admin/login')
@@ -103,6 +109,7 @@ const logout = () => {
 
 <template>
   <div>
+    <!-- 头部：标题与退出按钮 -->
     <div class="flex items-center justify-between mb-8">
       <div>
         <h1 class="text-3xl font-bold mb-2">管理员后台</h1>
@@ -111,7 +118,7 @@ const logout = () => {
       <button @click="logout" class="btn bg-red-600 hover:bg-red-700">退出登录</button>
     </div>
 
-    <!-- Tabs -->
+    <!-- 标签页切换 -->
     <div class="flex gap-4 mb-6 border-b border-[var(--border-color)]">
       <button 
         @click="activeTab = 'pending'" 
@@ -136,7 +143,9 @@ const logout = () => {
       </button>
     </div>
 
-    <!-- Content -->
+    <!-- 内容区域 -->
+    
+    <!-- 审核看板 -->
     <div v-if="activeTab === 'pending'">
       <div v-if="pendingApps.length === 0" class="text-center py-20 card">
         <div class="i-mdi-check-all text-5xl text-gray-400 mx-auto mb-4" />
@@ -145,10 +154,12 @@ const logout = () => {
       <div v-else class="space-y-4">
         <div v-for="app in pendingApps" :key="app.id" class="card p-4 flex items-center justify-between">
           <div class="flex items-center gap-4">
+            <!-- 缩略图预览 -->
             <div class="w-16 h-16 rounded bg-gray-200 overflow-hidden">
                <img v-if="app.thumbnail_base64" :src="app.thumbnail_base64" class="w-full h-full object-cover" />
                <div v-else class="w-full h-full flex items-center justify-center"><div class="i-mdi-image-off" /></div>
             </div>
+            <!-- 应用详情 -->
             <div>
               <h3 class="font-bold text-lg">{{ app.name }}</h3>
               <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
@@ -160,6 +171,7 @@ const logout = () => {
               <div class="text-xs text-[var(--text-secondary)] mt-1">URL: {{ app.url }}</div>
             </div>
           </div>
+          <!-- 操作按钮 -->
           <div class="flex items-center gap-4">
              <div class="text-right mr-4">
                 <div class="text-xs text-[var(--text-secondary)]">提交时间</div>
@@ -173,6 +185,7 @@ const logout = () => {
       </div>
     </div>
 
+    <!-- 网站配置 -->
     <div v-if="activeTab === 'config'">
       <div class="card p-8 max-w-2xl">
         <h2 class="text-xl font-bold mb-6">网站配置</h2>
@@ -201,6 +214,7 @@ const logout = () => {
       </div>
     </div>
     
+    <!-- 卡片管理 -->
     <div v-if="activeTab === 'apps'">
       <div class="space-y-4">
         <div v-for="app in onlineApps" :key="app.id" class="card p-4 flex items-center justify-between">

@@ -5,25 +5,27 @@ from .main import get_password_hash
 import base64
 
 def init_db():
+    """初始化数据库，创建默认用户和示例数据"""
     db = SessionLocal()
     
-    # Check if admin exists
+    # 检查是否已存在管理员用户
     admin = db.query(models.AdminUser).filter(models.AdminUser.username == "admin").first()
     if not admin:
         print("Creating default admin user...")
+        # 创建默认管理员: admin / admin123
         admin = models.AdminUser(
             username="admin",
             password_hash=get_password_hash("admin123")
         )
         db.add(admin)
     
-    # Check config
+    # 检查并初始化系统配置
     if not db.query(models.SystemConfig).first():
         print("Seeding config...")
         db.add(models.SystemConfig(key="title", value="办公网网信系统融合应用平台"))
         db.add(models.SystemConfig(key="slogan", value="打造网信系统开发、发布、推广应用的开放平台"))
     
-    # Seed apps if empty
+    # 如果没有应用，则填充示例数据
     if not db.query(models.ApprovedApp).first():
         print("Seeding example apps...")
         examples = [
@@ -86,14 +88,14 @@ def init_db():
         for ex in examples:
             app = models.ApprovedApp(
                 name=ex["name"],
-                url="http://example.com", # Placeholder
+                url="http://example.com", # 示例链接
                 description=ex["description"],
                 developer=ex["developer"],
                 deploy_env=ex["deploy_env"],
                 category=ex["category"],
                 scope=ex["scope"],
                 admin_contact=ex["admin_contact"],
-                status=1
+                status=1 # 默认上线
             )
             db.add(app)
             
@@ -102,6 +104,6 @@ def init_db():
     print("Database initialized.")
 
 if __name__ == "__main__":
-    # Ensure tables exist
+    # 确保所有表都已创建
     models.Base.metadata.create_all(bind=engine)
     init_db()

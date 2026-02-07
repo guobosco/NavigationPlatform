@@ -5,6 +5,7 @@ const props = defineProps<{
   category: string
 }>()
 
+// 定义不同分类的颜色样式
 const colors: Record<string, string> = {
   web: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   desktop: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
@@ -14,7 +15,10 @@ const colors: Record<string, string> = {
   other: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
 }
 
+// 计算当前分类的颜色类名
 const colorClass = computed(() => colors[props.category] || colors.other)
+
+// 计算当前分类的显示名称
 const label = computed(() => {
   const map: Record<string, string> = {
     web: 'Web应用',

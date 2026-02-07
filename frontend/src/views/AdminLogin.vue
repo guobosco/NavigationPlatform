@@ -8,6 +8,7 @@ const password = ref('')
 const error = ref('')
 const loading = ref(false)
 
+// 登录处理函数
 const login = async () => {
   loading.value = true
   error.value = ''
@@ -24,7 +25,9 @@ const login = async () => {
     
     if (res.ok) {
       const data = await res.json()
+      // 存储 JWT Token
       localStorage.setItem('starbase_admin_token', data.access_token)
+      // 跳转到后台管理页
       router.push('/admin')
     } else {
       error.value = '用户名或密码错误'
